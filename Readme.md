@@ -61,6 +61,41 @@ ecommerce_payment_service/
 
 ## Setup
 
+### Using Docker (Recommended)
+
+1. Make sure Docker and Docker Compose are installed on your system.
+
+2. Create a `.env` file with your MySQL password:
+```bash
+MYSQL_PASSWORD=your_secure_password
+```
+
+3. Build and start the services:
+```bash
+docker-compose up --build
+```
+
+The services will be available at:
+- API: http://localhost:8001
+- MySQL: localhost:3308
+- Swagger UI: http://localhost:8001/docs
+- ReDoc: http://localhost:8001/redoc
+
+Sample data will be automatically loaded by the data_loader service.
+
+To stop the services:
+```bash
+docker-compose down
+```
+
+To reset the database (this will delete all data):
+```bash
+docker-compose down -v
+docker-compose up --build
+```
+
+### Manual Setup (Alternative)
+
 1. Set up a Python virtual environment:
 ```bash
 # Create a new virtual environment
@@ -102,16 +137,27 @@ python csv_loader.py --password your_mysql_password
 
 ## Running the Application
 
-Start the FastAPI server:
+### Using Docker (Recommended)
 ```bash
-python -m uvicorn app.main:app --reload
+# Start all services
+docker-compose up
+
+# Or rebuild and start (after changes)
+docker-compose up --build
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8001`
+MySQL will be available at `localhost:3308`
 
-API documentation will be available at:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+### Manual Start
+Start the FastAPI server:
+```bash
+python -m uvicorn app.main:app --reload --port 8001
+```
+
+The API documentation will be available at:
+- Swagger UI: `http://localhost:8001/docs`
+- ReDoc: `http://localhost:8001/redoc`
 
 ## Virtual Environment Management
 
@@ -156,7 +202,7 @@ CREATE TABLE payments (
 ### Create a Payment
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:8000/v1/payments/charge' \
+  'http://127.0.0.1:8001/v1/payments/charge' \
   -H 'Content-Type: application/json' \
   -d '{
     "order_id": 342,
@@ -167,10 +213,19 @@ curl -X 'POST' \
 ### Process a Refund
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:8000/v1/payments/123/refund'
+  'http://127.0.0.1:8001/v1/payments/123/refund'
 ```
 
 ### List Payments with Filters
 ```bash
-curl 'http://127.0.0.1:8000/v1/payments?page=1&per_page=10&method=UPI&status=SUCCESS'
+curl 'http://127.0.0.1:8001/v1/payments?page=1&per_page=10&method=UPI&status=SUCCESS'
+```
+
+### Connect to MySQL
+```bash
+# Using docker compose
+docker-compose exec db mysql -u root -p${MYSQL_PASSWORD} ecommerce
+
+# Or from host machine
+mysql -h 127.0.0.1 -P 3308 -u root -p ecommerce
 ``` 
